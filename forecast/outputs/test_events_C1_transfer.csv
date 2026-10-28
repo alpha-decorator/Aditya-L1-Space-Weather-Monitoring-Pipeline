@@ -1,0 +1,3 @@
+,flares,hits,misses,alert_episodes,false_alarms,POD,FAR(ratio),CSI,false_alarms_per_day,lead_vs_nowcast_alarm_median_min,lead_vs_start_median_min,lead_vs_peak_median_min,precursor_fraction
+GBM forecast,542.0,374.0,168.0,699.0,302.0,0.6900369003690037,0.43204577968526464,0.4431279620853081,2.537829935982353,1.0,-5.0,5.5,0.09358288770053476
+rise rule (no ML),542.0,352.0,190.0,808.0,446.0,0.6494464944649446,0.551980198019802,0.3562753036437247,3.7479210312851965,1.0,-5.0,5.0,0.09943181818181818

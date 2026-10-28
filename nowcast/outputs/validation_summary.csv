@@ -1,0 +1,11 @@
+,dev Jan-Apr (tuning),TEST May-Oct (held out),Aditya-L1 window Mar 1-Jun 25
+precision,0.9029754204398448,0.9103521878335112,0.9159663865546218
+recall(POD),0.9145860709592641,0.9102564102564102,0.9055555555555556
+F1,0.908743661065521,0.9103042965256536,0.9107312197247354
+detected(>=min),773.0,937.0,714.0
+reference(>=min),761.0,936.0,720.0
+class_letter_agreement,1.0,0.9988262910798122,1.0
+alert_latency_median_min,6.0,6.0,6.0
+alert_latency_p90_min,8.0,8.0,8.0
+alert_before_peak_median_min,3.0,3.0,3.0
+peak_offset_median_min,0.0,0.0,0.0

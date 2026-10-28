@@ -1,0 +1,5 @@
+,flares scored,POD,FAR(ratio),CSI,median warning (min),false alarms/day,ROC AUC,BSS
+original notebook (as claimed),25,1.0,0.107,0.893,11.3 (to peak),,,
+this work: >= C1.0 (held-out Jul-Oct),542,0.6623616236162362,0.3648424543946932,0.47112860892388453,1.0 vs nowcast / -5.0 vs start / 5.0 vs peak,1.85,0.793,0.124
+this work: >= M1.0 (held-out Jul-Oct),79,0.4430379746835443,0.7808988764044944,0.16055045871559634,13.0 vs nowcast / 4.0 vs start / 16.0 vs peak,1.17,0.848,0.048
+this work: >= C1.0 transfer (held-out Jul-Oct),542,0.6900369003690037,0.43204577968526464,0.4431279620853081,1.0 vs nowcast / -5.0 vs start / 5.5 vs peak,2.54,0.771,0.108
