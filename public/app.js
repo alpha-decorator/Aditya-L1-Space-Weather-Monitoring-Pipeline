@@ -180,8 +180,8 @@ function raiseAlarm(a) {
 async function load() {
   try {
     const r = await fetch(API, { cache: "no-store" });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.series) throw new Error(j.error || `HTTP ${r.status}`);
     snap = DEMO ? demo(j, DEMO) : j;
     render();
     setBanner(j.error ? `The latest refresh failed, showing the previous update (${j.error}).` : null);

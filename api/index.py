@@ -10,12 +10,13 @@ this module is the serverless function (``app``) and public/ is served as static
 
 from __future__ import annotations
 
+import os
 import sys
 import threading
 import time
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
@@ -53,3 +54,21 @@ def snapshot():
 @app.get("/api/health")
 def health():
     return {"ok": True, "cached": _cache["data"] is not None, "error": _cache["error"]}
+
+
+# On Vercel, vercel.json rewrites /api/<route> to this function as /api/index?route=<route>, and the path
+# the app then sees is not always the public one. Dispatch on ?route= (or the last path segment) instead.
+def _dispatch(request: Request):
+    route = request.query_params.get("route") or request.url.path.rstrip("/").rsplit("/", 1)[-1]
+    return health() if route == "health" else snapshot()
+
+
+@app.get("/api/{rest:path}")
+def api_fallback(request: Request, rest: str = ""):
+    return _dispatch(request)
+
+
+if os.environ.get("VERCEL"):  # locally, "/" must stay free for the static page mounted by serve.py
+    @app.get("/{rest:path}")
+    def vercel_fallback(request: Request, rest: str = ""):
+        return _dispatch(request)
