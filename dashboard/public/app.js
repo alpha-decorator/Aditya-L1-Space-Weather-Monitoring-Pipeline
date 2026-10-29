@@ -5,7 +5,7 @@ const REFRESH_MS = 30_000;
 const P_MIN = 0.001;                // forecast axis floor (0.1 %)
 const CLASSES = [["A", 1e-8], ["B", 1e-7], ["C", 1e-6], ["M", 1e-5], ["X", 1e-4]];
 const MIN_FLUX = { C1: 1e-6, M1: 1e-5 };
-const BAR_COLORS = { A: "#4a3352", B: "#6b4a78", C: "#a8558f", M: "#e2569b", X: "#f6ead0" };
+const BAR_COLORS = { A: "var(--bar-A)", B: "var(--bar-B)", C: "var(--bar-C)", M: "var(--bar-M)", X: "var(--bar-X)" };
 const DEMO = new URLSearchParams(location.search).get("demo");   // ?demo=watch | major | flare
 
 let snap = null;
@@ -52,16 +52,28 @@ const STATE_LABEL = { QUIET: "Quiet", FLARE: "Flare in progress", DECAY: "Flare 
 // ---------------------------------------------------------------- illustration
 function rng(seed) { return () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646; }
 const sparkle = (x, y, r, fill) =>
-  `<path d="M${x},${y - r}Q${x + r * .16},${y - r * .16} ${x + r},${y}Q${x + r * .16},${y + r * .16} ${x},${y + r}Q${x - r * .16},${y + r * .16} ${x - r},${y}Q${x - r * .16},${y - r * .16} ${x},${y - r}Z" fill="${fill}"/>`;
+  `<path d="M${x},${y - r}Q${x + r * .16},${y - r * .16} ${x + r},${y}Q${x + r * .16},${y + r * .16} ${x},${y + r}Q${x - r * .16},${y + r * .16} ${x - r},${y}Q${x - r * .16},${y - r * .16} ${x},${y - r}Z" style="fill:${fill}"/>`;
 
 function drawSky() {
-  const W = 1600, H = 1000, R = rng(7);
+  const W = 1600, H = 1000, R = rng(7), phase = document.documentElement.dataset.phase;
   let s = "";
-  for (let i = 0; i < 220; i++) {
-    const c = R() < 0.82 ? "#f6ead0" : R() < 0.5 ? "#f26a2e" : "#f29bc4";
-    s += `<circle cx="${(R() * W).toFixed(0)}" cy="${(R() * H).toFixed(0)}" r="${(R() * 1.3 + 0.3).toFixed(2)}" fill="${c}" opacity="${(R() * 0.6 + 0.15).toFixed(2)}"/>`;
+  if (phase === "day") {
+    // flat illustrated clouds and a few warm sparkles
+    const cloud = (x, y, k, o) => `<g transform="translate(${x} ${y}) scale(${k})" opacity="${o}" fill="#ffffff">`
+      + `<ellipse cx="0" cy="0" rx="70" ry="26"/><ellipse cx="-38" cy="-12" rx="34" ry="26"/><ellipse cx="22" cy="-22" rx="40" ry="32"/><ellipse cx="60" cy="-4" rx="28" ry="20"/></g>`;
+    s += cloud(220, 140, 1.4, .7) + cloud(1240, 90, 1.1, .6) + cloud(980, 330, .8, .45) + cloud(420, 560, 1.2, .35) + cloud(1450, 700, 1.5, .4);
+    for (let i = 0; i < 6; i++) s += sparkle(Math.round(R() * W), Math.round(R() * H), Math.round(5 + R() * 6), "rgba(242,106,46,.35)");
+  } else {
+    // night: full starfield; dawn: stars fade toward the bright horizon
+    const n = phase === "dawn" ? 120 : 220;
+    for (let i = 0; i < n; i++) {
+      const y = phase === "dawn" ? Math.pow(R(), 1.8) * H : R() * H;
+      const fade = phase === "dawn" ? Math.max(0, 1 - y / (H * 0.75)) : 1;
+      const c = R() < 0.82 ? "#f6ead0" : R() < 0.5 ? "#f26a2e" : "#f29bc4";
+      s += `<circle cx="${(R() * W).toFixed(0)}" cy="${y.toFixed(0)}" r="${(R() * 1.3 + 0.3).toFixed(2)}" fill="${c}" opacity="${((R() * 0.6 + 0.15) * fade).toFixed(2)}"/>`;
+    }
+    for (let i = 0; i < 9; i++) s += sparkle(Math.round(R() * W), Math.round(R() * H * (phase === "dawn" ? .5 : 1)), Math.round(5 + R() * 7), "rgba(246,234,208,.55)");
   }
-  for (let i = 0; i < 9; i++) s += sparkle(Math.round(R() * W), Math.round(R() * H), Math.round(5 + R() * 7), "rgba(246,234,208,.55)");
   const sky = $("#sky");
   sky.setAttribute("viewBox", `0 0 ${W} ${H}`);
   sky.setAttribute("preserveAspectRatio", "xMidYMid slice");
@@ -93,13 +105,13 @@ function drawSun(alarm, flaring) {
       <clipPath id="c-disc"><circle r="84"/></clipPath>
     </defs>
     <g class="breathe"><circle r="158" fill="url(#g-glow)"/></g>
-    <circle r="142" fill="none" stroke="rgba(246,234,208,.16)" stroke-width="1" stroke-dasharray="2 7"/>
+    <circle r="142" fill="none" stroke="var(--orbit)" stroke-width="1" stroke-dasharray="2 7"/>
     <g class="spin"><polygon points="${spikes.join(" ")}" fill="#f26a2e"/></g>
     <circle r="98" fill="#f6a04d"/>
     <circle r="84" fill="url(#g-disc)"/>
     <g clip-path="url(#c-disc)">${speck}<path d="M-84,30 C-30,10 30,60 84,26 L84,90 L-84,90Z" fill="#f29bc4" opacity=".28"/></g>
     ${prominence}
-    ${sparkle(-128, -108, 9, "#f6ead0")}${sparkle(132, 92, 7, "#f6ead0")}${sparkle(-140, 70, 5, "#f29bc4")}
+    ${sparkle(-128, -108, 9, "var(--sparkle)")}${sparkle(132, 92, 7, "var(--sparkle)")}${sparkle(-140, 70, 5, "#f29bc4")}
     <g class="orbit-sat"><g transform="translate(142,0) rotate(90)">
       <rect x="-24" y="-6" width="16" height="12" rx="1.5" fill="#e2569b"/><path d="M-20,-6v12M-16,-6v12M-12,-6v12M-24,0h16" stroke="#9d2f68" stroke-width="1"/>
       <rect x="8" y="-6" width="16" height="12" rx="1.5" fill="#e2569b"/><path d="M12,-6v12M16,-6v12M20,-6v12M8,0h16" stroke="#9d2f68" stroke-width="1"/>
@@ -412,7 +424,7 @@ function drawFlux() {
   const y = (v) => F.m.t + (1 - (Math.log10(v) - e0) / (e1 - e0)) * F.ih;
   const base = F.m.t + F.ih;
 
-  let g = `<defs><linearGradient id="g-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2569b" stop-opacity=".55"/><stop offset="1" stop-color="#e2569b" stop-opacity="0"/></linearGradient></defs>`;
+  let g = `<defs><linearGradient id="g-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--s-flux)" stop-opacity=".5"/><stop offset="1" style="stop-color:var(--s-flux)" stop-opacity="0"/></linearGradient></defs>`;
   g += alarmSpans(F, x, t0, t1);
   const visible = snap.flares.filter((f) => (f.end ?? t1) >= t0);
   for (const f of visible) {
@@ -445,10 +457,10 @@ function drawFlux() {
     if (px - lastX < 36) continue;
     lastX = px;
     const py = Math.max(F.m.t + 14, y(f.peak) - 12);
-    g += `<rect x="${px - 19}" y="${py - 11}" width="38" height="16" rx="8" fill="rgba(246,234,208,.92)"/><text x="${px}" y="${py + 1}" text-anchor="middle" style="font-size:10.5px;font-weight:600;fill:#2a1530">${esc(f.class)}</text>`;
+    g += `<rect x="${px - 19}" y="${py - 11}" width="38" height="16" rx="8" fill="var(--label-bg)"/><text x="${px}" y="${py + 1}" text-anchor="middle" style="font-size:10.5px;font-weight:600;fill:var(--label-ink)">${esc(f.class)}</text>`;
   }
   const last = S.xrsb[S.t.length - 1];
-  if (last > 0) g += `<circle cx="${x(t1)}" cy="${y(last)}" r="5" fill="var(--s-flux)" stroke="var(--plum-800)" stroke-width="2"/>`;
+  if (last > 0) g += `<circle cx="${x(t1)}" cy="${y(last)}" r="5" fill="var(--s-flux)" stroke="var(--surface)" stroke-width="2"/>`;
   mount(el, F, g, x, y, [{ key: "xrsb", color: "s-flux", ok: (v) => v > 0 }], "Sun's X-ray brightness chart");
 }
 
@@ -473,7 +485,7 @@ function drawProb() {
     g += `<path d="${linePath(S.t, S[`p_${k}`], x, y, i0)}" fill="none" stroke="var(--${c})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
     const lp = S[`p_${k}`][S.t.length - 1];
     if (lp != null) {
-      g += `<circle cx="${x(t1)}" cy="${y(lp)}" r="4" fill="var(--${c})" stroke="var(--plum-800)" stroke-width="2"/>`;
+      g += `<circle cx="${x(t1)}" cy="${y(lp)}" r="4" fill="var(--${c})" stroke="var(--surface)" stroke-width="2"/>`;
       ends.push({ y: y(lp), text: `${name} ${pct(lp)}` });
     }
   }
@@ -578,10 +590,10 @@ function showHover(tHover, pt) {
   const t = S.t[i];
   for (const c of Object.values(charts)) {
     const xx = c.x(t);
-    let h = `<line x1="${xx}" x2="${xx}" y1="${c.F.m.t}" y2="${c.F.m.t + c.F.ih}" stroke="rgba(246,234,208,.35)"/>`;
+    let h = `<line x1="${xx}" x2="${xx}" y1="${c.F.m.t}" y2="${c.F.m.t + c.F.ih}" stroke="var(--muted)"/>`;
     for (const k of c.keys) {
       const v = S[k.key][i];
-      if (k.ok(v)) h += `<circle cx="${xx}" cy="${c.y(v)}" r="5" fill="var(--${k.color})" stroke="#f6ead0" stroke-width="2"/>`;
+      if (k.ok(v)) h += `<circle cx="${xx}" cy="${c.y(v)}" r="5" fill="var(--${k.color})" stroke="var(--surface)" stroke-width="2"/>`;
     }
     c.el.querySelector(".hover").innerHTML = h;
   }
@@ -645,6 +657,48 @@ function renderModel(s) {
     : `<tbody><tr><td class="empty">No retraining runs yet. Run <code>python -m continual daily</code> or start the server with <code>--retrain-daily</code>.</td></tr></tbody>`;
 }
 
+// ---------------------------------------------------------------- time-of-day theme
+const PHASES = ["auto", "dawn", "day", "night"];
+const PHASE_ICON = {
+  day: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  dawn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 18h18M6 18a6 6 0 0 1 12 0"/><path d="M12 4v4M4.9 9.9l1.4 1.4M19.1 9.9l-1.4 1.4M9 21h6"/></svg>',
+  night: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+};
+const THEME_COLOR = { night: "#120a16", dawn: "#2d1640", day: "#cfe6f6" };
+
+function autoPhase(d = new Date()) {
+  const h = d.getHours();                      // the viewer's own local time
+  if (h >= 5 && h < 8) return { phase: "dawn", label: "Dawn" };
+  if (h >= 8 && h < 17) return { phase: "day", label: "Day" };
+  if (h >= 17 && h < 20) return { phase: "dawn", label: "Dusk" };
+  return { phase: "night", label: "Night" };
+}
+let phaseMode = "auto";
+try { phaseMode = localStorage.getItem("phase") || "auto"; } catch (e) { /* storage blocked */ }
+const PHASE_QS = new URLSearchParams(location.search).get("phase");   // preview: ?phase=dawn | day | night
+if (PHASES.includes(PHASE_QS)) phaseMode = PHASE_QS;
+
+function applyPhase() {
+  const a = autoPhase();
+  const phase = phaseMode === "auto" ? a.phase : phaseMode;
+  const label = phaseMode === "auto" ? `${a.label} · auto` : phaseMode[0].toUpperCase() + phaseMode.slice(1);
+  $("#phase-ico").innerHTML = PHASE_ICON[phase];
+  $("#phase-text").textContent = label;
+  $("#phase-btn").title = phaseMode === "auto"
+    ? `Theme follows your local time (${a.label.toLowerCase()} now). Click to pin a theme.`
+    : "Theme pinned. Click to change; choose Auto to follow your local time.";
+  if (document.documentElement.dataset.phase !== phase || !$("#sky").childElementCount) {
+    document.documentElement.dataset.phase = phase;
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", THEME_COLOR[phase]);
+    drawSky();
+  }
+}
+$("#phase-btn").addEventListener("click", () => {
+  phaseMode = PHASES[(PHASES.indexOf(phaseMode) + 1) % PHASES.length];
+  try { localStorage.setItem("phase", phaseMode); } catch (e) { /* ignore */ }
+  applyPhase();
+});
+
 // ---------------------------------------------------------------- wiring
 function tickClock() {
   const d = new Date();
@@ -674,9 +728,10 @@ let rz;
 new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(drawCharts, 80); }).observe($("main"));
 
 document.querySelectorAll("svg.ill").forEach((el) => { el.innerHTML = ILL[el.dataset.ill]; });
-drawSky();
+applyPhase();
 drawSun({ tone: "good" }, false);
 tickClock();
 setInterval(tickClock, 1000);
+setInterval(applyPhase, 60_000);
 load();
 setInterval(load, REFRESH_MS);

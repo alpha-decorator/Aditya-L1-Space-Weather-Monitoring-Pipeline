@@ -11,6 +11,9 @@ A web dashboard for the nowcast and forecast engines, running on the public GOES
 * The model: active versions, alarm rules, held-out skill (caught, false alarms, false alarms per day, typical warning)
   and the daily retraining log from `../continual`
 * Optional alarm sound + desktop notification; phone layout with a bottom navigation bar
+* **Time-of-day themes** from the viewer's own clock: dawn (05–08), day (08–17), dusk (17–20, twilight palette),
+  night (20–05). Re-checked every minute; the theme button pins Dawn / Day / Night or returns to Auto
+  (preview with `/?phase=day`)
 * Preview the alarm states on a quiet day: `/?demo=watch`, `/?demo=major`, `/?demo=flare`
 
 Visual style: dark "deep space" palette (plum, magenta, orange, lavender, cream) with original flat illustrations

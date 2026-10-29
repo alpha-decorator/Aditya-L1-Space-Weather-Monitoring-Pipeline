@@ -11,6 +11,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    /* set the time-of-day theme before first paint (local clock of this computer) */
+    (function () {
+      var m = null; try { m = localStorage.getItem("phase"); } catch (e) {}
+      var q = new URLSearchParams(location.search).get("phase"); if (q) m = q;
+      var h = new Date().getHours();
+      var auto = h >= 5 && h < 8 ? "dawn" : h >= 8 && h < 17 ? "day" : h >= 17 && h < 20 ? "dawn" : "night";
+      document.documentElement.dataset.phase = m && m !== "auto" ? m : auto;
+    })();
+  </script>
 </head>
 <body>
   <svg class="sky" id="sky" aria-hidden="true"></svg>
@@ -35,7 +45,10 @@
     <main id="top">
       <header class="topbar">
         <div class="brand">FlareWatch <span class="spark">✦</span></div>
-        <div class="live" id="live"><span class="dot"></span><span id="live-text">Connecting…</span></div>
+        <div class="top-right">
+          <button class="phase-btn" id="phase-btn" type="button" title="Theme follows your local time. Click to choose."><span id="phase-ico"></span><span id="phase-text">Auto</span></button>
+          <div class="live" id="live"><span class="dot"></span><span id="live-text">Connecting…</span></div>
+        </div>
       </header>
 
       <div class="banner" id="banner" hidden></div>
