@@ -1,0 +1,43 @@
+# Daily continual learning for the deployed dashboard.
+# Stores yesterday's GOES-19 XRS data, retrains the forecasters, promotes them only if they beat the
+# active models on unseen days, and commits the store + registry. The push redeploys the site, which
+# then serves the new active models.
+name: daily-retrain
+
+on:
+  schedule:
+    - cron: "30 0 * * *"      # 00:30 UTC, after the day is complete
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-retrain
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: forecast/requirements.txt
+      - run: pip install -r forecast/requirements.txt
+      - run: python -W ignore -m continual daily
+      - run: python -m continual status
+      - name: Commit store and registry
+        run: |
+          git config user.name "flare-retrain-bot"
+          git config user.email "flare-retrain-bot@users.noreply.github.com"
+          git add continual/store continual/registry
+          if git diff --cached --quiet; then
+            echo "nothing changed"
+          else
+            git commit -m "Daily retrain: data through $(date -u -d yesterday +%Y-%m-%d)"
+            git push
+          fi

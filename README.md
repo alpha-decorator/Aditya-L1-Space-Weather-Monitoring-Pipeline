@@ -93,6 +93,16 @@ For Aditya-L1 (1 s SoLEXS + HEL1OS), see the Aditya-L1 sections of [`nowcast/REA
 
 ---
 
+## 🖥️ Live dashboard and continual learning
+
+* [`dashboard/`](dashboard/README.md) — **FlareWatch**, a web dashboard on the live GOES-19 feed: alarm board, charts,
+  alarm log with outcomes, model skill and versions. `python dashboard/serve.py` → http://127.0.0.1:8000
+* [`continual/`](continual/README.md) — the forecaster keeps learning while deployed: each day's data is stored, both
+  models are retrained on the full history, and a new version goes live only if it beats the current one on days
+  neither has seen. Runs daily via `serve.py --retrain-daily` or `.github/workflows/daily-retrain.yml`.
+
+---
+
 ## 📁 Repository layout
 
 ```

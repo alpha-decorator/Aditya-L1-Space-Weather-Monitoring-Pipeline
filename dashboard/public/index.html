@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlareWatch</title>
+  <meta name="description" content="Live solar flare alarms, nowcast and 15-minute forecast from GOES-19 soft X-rays, with a self-improving model.">
+  <meta name="theme-color" content="#120a16">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon fill='%23f26a2e' points='16,1 18.5,7 24.5,3.5 23.5,10 30,10.5 25,15 30,19.5 23.5,20.5 24.5,27 18.5,24 16,31 13.5,24 7.5,27 8.5,20.5 2,19.5 7,15 2,10.5 8.5,10 7.5,3.5 13.5,7'/%3E%3Ccircle cx='16' cy='16' r='7.5' fill='%23f6ead0'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg class="sky" id="sky" aria-hidden="true"></svg>
+
+  <div class="app">
+    <!-- icon rail -->
+    <nav class="rail" aria-label="Sections">
+      <a class="logo" href="#top" aria-label="FlareWatch home">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><polygon class="corona" points="16,1 18.5,7 24.5,3.5 23.5,10 30,10.5 25,15 30,19.5 23.5,20.5 24.5,27 18.5,24 16,31 13.5,24 7.5,27 8.5,20.5 2,19.5 7,15 2,10.5 8.5,10 7.5,3.5 13.5,7"/><circle cx="16" cy="16" r="7.5"/></svg>
+      </a>
+      <a href="#top" class="nav on" data-sec="top" title="Overview"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg><span>Overview</span></a>
+      <a href="#alarms" class="nav" data-sec="alarms" title="Alarms"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span>Alarms</span></a>
+      <a href="#charts" class="nav" data-sec="charts" title="Charts"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M5 15l4-5 4 3 6-7"/></svg><span>Charts</span></a>
+      <a href="#model" class="nav" data-sec="model" title="Model"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg><span>Model</span></a>
+      <div class="rail-foot">
+        <button class="nav" id="sound-btn" type="button" aria-pressed="false" title="Alarm sound off">
+          <svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg><span>Sound</span>
+        </button>
+      </div>
+    </nav>
+
+    <main id="top">
+      <header class="topbar">
+        <div class="brand">FlareWatch <span class="spark">✦</span></div>
+        <div class="live" id="live"><span class="dot"></span><span id="live-text">Connecting…</span></div>
+      </header>
+
+      <div class="banner" id="banner" hidden></div>
+
+      <!-- stat tiles -->
+      <section class="stats">
+        <article class="stat"><span class="chip c-orange"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg></span><div><div class="k">X-ray level now</div><div class="v" id="st-class">—</div></div></article>
+        <article class="stat"><span class="chip c-plum"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></span><div><div class="k">Nowcast</div><div class="v" id="st-state">—</div></div></article>
+        <article class="stat"><span class="chip c-blue"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span><div><div class="k">Coordinated time (UTC)</div><div class="v mono" id="st-clock">—</div></div></article>
+        <article class="stat"><span class="chip c-brown"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></span><div><div class="k">Flares in last 24 h</div><div class="v" id="st-count">—</div></div></article>
+      </section>
+
+      <!-- hero: the alarm board -->
+      <section class="hero" id="hero" aria-live="assertive">
+        <div class="hero-art">
+          <svg class="sun" id="sun" viewBox="-160 -160 320 320" aria-hidden="true"></svg>
+          <div class="hero-copy">
+            <div class="tone-chip" id="tone-chip"></div>
+            <h1 class="big" id="big">—</h1>
+            <p class="lede" id="lede">&nbsp;</p>
+            <a class="link" href="#alarms">View alarm log <span aria-hidden="true">›</span></a>
+          </div>
+        </div>
+
+        <div class="hero-side">
+          <div class="panel chart-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Sun's X-ray brightness</h2>
+                <p class="sub">GOES-19, 1-minute. Higher = bigger flare.</p>
+              </div>
+              <div class="seg" role="group" aria-label="Time range">
+                <button type="button" data-range="6">6h</button>
+                <button type="button" data-range="24" class="on">24h</button>
+                <button type="button" data-range="48">48h</button>
+              </div>
+            </div>
+            <div class="chart" id="chart-flux"></div>
+          </div>
+
+          <div class="model-pill">
+            <span class="pill-glow">Forecast model</span>
+            <div class="pill-body"><span class="pill-v" id="pill-version">—</span><span class="pill-k" id="pill-trained">&nbsp;</span></div>
+          </div>
+
+          <div class="panel rings">
+            <div class="ring-wrap" id="ring-C1"></div>
+            <div class="ring-wrap" id="ring-M1"></div>
+            <div class="ring-wrap" id="ring-caught"></div>
+            <div class="ring-wrap" id="ring-false"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- alarms -->
+      <section class="panel" id="alarms">
+        <div class="panel-head">
+          <div>
+            <h2>Alarm log</h2>
+            <p class="sub">Forecast alarms and detected flares in the last 48 h, and what happened after each (UTC).</p>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="alarm-log"></table></div>
+      </section>
+
+      <!-- charts -->
+      <section class="grid2" id="charts">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Flare chance in the next 15 min</h2>
+              <p class="sub">A line crossing its alarm level starts an alarm. Gaps = a flare was already happening.</p>
+            </div>
+          </div>
+          <div class="legend" id="legend-prob"></div>
+          <div class="chart" id="chart-prob"></div>
+          <details class="more">
+            <summary>Show the last 60 minutes as a table</summary>
+            <div class="table-wrap"><table id="recent-table"></table></div>
+          </details>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Flares per 6 hours</h2>
+              <p class="sub">Last 48 h, coloured by the biggest flare in each block.</p>
+            </div>
+          </div>
+          <div class="chart" id="chart-bars"></div>
+          <div class="legend" id="legend-bars"></div>
+        </div>
+      </section>
+
+      <!-- model -->
+      <section class="panel" id="model">
+        <div class="panel-head">
+          <div>
+            <h2>The model</h2>
+            <p class="sub">Retrained every day on all stored data. A new version replaces the current one only if it does better on recent days neither has seen.</p>
+          </div>
+        </div>
+        <div class="model-grid" id="model-cards"></div>
+        <h3 class="h3">Daily retraining</h3>
+        <div class="table-wrap"><table id="learning-log"></table></div>
+        <div class="how">
+          <div class="how-step"><svg viewBox="0 0 64 64" aria-hidden="true" class="ill" data-ill="sat"></svg><div><b>Measure</b><span>GOES-19 measures the Sun's X-rays every minute.</span></div></div>
+          <div class="how-step"><svg viewBox="0 0 64 64" aria-hidden="true" class="ill" data-ill="scope"></svg><div><b>Detect</b><span>The nowcast spots flares as they rise and classifies them.</span></div></div>
+          <div class="how-step"><svg viewBox="0 0 64 64" aria-hidden="true" class="ill" data-ill="orb"></svg><div><b>Forecast</b><span>Two models give the chance of a C or M flare in the next 15 minutes.</span></div></div>
+          <div class="how-step"><svg viewBox="0 0 64 64" aria-hidden="true" class="ill" data-ill="loop"></svg><div><b>Learn</b><span>Every night the models retrain and are tested before going live.</span></div></div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p>Data: NOAA SWPC GOES-19 XRS real-time feed, checked every 30 s. Aditya-L1 SoLEXS/HEL1OS will be added once PRADAN data are loaded.</p>
+        <p class="version" id="version">&nbsp;</p>
+      </footer>
+    </main>
+  </div>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>
