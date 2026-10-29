@@ -1,5 +1,7 @@
 # Everything else: notebooks, daily retraining, tests, local server.
 -r requirements.txt
+lightgbm>=4.3       # training (inference falls back to numpy when absent)
+xgboost>=2.0
 scikit-learn>=1.4   # calibration + metrics (training only)
 pyarrow>=15         # parquet: GOES archive cache and the continual-learning store
 h5py>=3.10          # GOES NCEI netCDF4/HDF5 files

@@ -45,8 +45,10 @@ The repository root is the Vercel project: import the GitHub repo, keep the fram
 root directory `./`, and deploy. No build command is needed.
 
 * `vercel.json` serves `public/` as the static site and routes `/api/*` to the Python function `api/index.py`.
-* `requirements.txt` holds only what the function needs (numpy, pandas, lightgbm, xgboost-cpu, fastapi).
-  Training-only packages are in `requirements-dev.txt`.
+* `requirements.txt` holds only what the function needs: numpy, pandas, fastapi. LightGBM and XGBoost need the
+  OpenMP runtime (`libgomp.so.1`), which Vercel does not provide, so the deployed function evaluates the saved
+  `lgb_model.txt` / `xgb_model.json` with numpy (`l1_forecast/treeinfer.py`; identical to the native libraries, tested).
+  Training packages are in `requirements-dev.txt`.
 * `.vercelignore` keeps the GOES cache, notebooks, outputs, tests and the training store out of the bundle.
 * The daily retrain runs on GitHub Actions and commits the new registry. That push redeploys the site, which then
   serves the new active models.

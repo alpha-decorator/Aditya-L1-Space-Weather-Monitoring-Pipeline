@@ -114,6 +114,16 @@ def test_model_save_load_roundtrip(tmp_path, nowcast_result):
     np.testing.assert_allclose(back.predict_proba(X.iloc[:500]), mdl.predict_proba(X.iloc[:500]), atol=1e-6)
 
 
+@pytest.mark.parametrize("name", ["C1", "M1", "C1_transfer"])
+def test_numpy_engine_matches_native(name, nowcast_result):
+    """The deployed site predicts with treeinfer (no lightgbm/xgboost); it must equal the native libraries."""
+    f = records_to_frame(nowcast_result.records, ["xrsb", "xrsa"])
+    X = build_features(f, "xrsb", "xrsa", 1.0, absolute=True)
+    d = Path(__file__).resolve().parents[1] / "models" / name
+    native, fallback = FlareForecaster.load(d, engine="native"), FlareForecaster.load(d, engine="numpy")
+    np.testing.assert_allclose(fallback.predict_raw(X), native.predict_raw(X), atol=1e-6)
+
+
 def test_streaming_engine_matches_batch(nowcast_result):
     mdl, f, X = _quick_model(nowcast_result)
     df = synthetic_goes()

@@ -123,24 +123,47 @@ class FlareForecaster:
         return d
 
     @classmethod
-    def load(cls, directory: str | Path) -> "FlareForecaster":
+    def load(cls, directory: str | Path, engine: str = "auto") -> "FlareForecaster":
+        """``engine``: "native" (lightgbm/xgboost), "numpy" (treeinfer, no native libraries - used on
+        Vercel, which lacks libgomp), or "auto" = native when importable, else numpy."""
         d = Path(directory)
         meta = json.loads((d / "forecaster.json").read_text())
         obj = cls(meta["feature_names"], use_lgb=meta["use_lgb"], use_xgb=meta["use_xgb"])
         if meta["use_lgb"]:
-            import lightgbm as lgb
-            obj.lgb_model = _LgbBoosterWrapper(lgb.Booster(model_file=str(d / "lgb_model.txt")))
+            obj.lgb_model = _load_member(d / "lgb_model.txt", engine, _native_lgb, "NumpyLgbModel")
         if meta["use_xgb"]:
-            import xgboost as xgb
-            booster = xgb.Booster()
-            booster.load_model(str(d / "xgb_model.json"))
-            obj.xgb_model = _XgbBoosterWrapper(booster)
+            obj.xgb_model = _load_member(d / "xgb_model.json", engine, _native_xgb, "NumpyXgbModel")
         if meta.get("calib_x") is not None:
             obj.calib_x = np.asarray(meta["calib_x"], float)
             obj.calib_y = np.asarray(meta["calib_y"], float)
         obj.meta = meta.get("meta", {})
         obj.saved = meta
         return obj
+
+
+def _native_lgb(path: Path):
+    import lightgbm as lgb
+    return _LgbBoosterWrapper(lgb.Booster(model_file=str(path)))
+
+
+def _native_xgb(path: Path):
+    import xgboost as xgb
+    booster = xgb.Booster()
+    booster.load_model(str(path))
+    return _XgbBoosterWrapper(booster)
+
+
+def _load_member(path: Path, engine: str, native, numpy_cls: str):
+    if engine not in ("auto", "native", "numpy"):
+        raise ValueError(f"unknown engine {engine!r}")
+    if engine != "numpy":
+        try:
+            return native(path)
+        except (ImportError, OSError):  # not installed, or its OpenMP runtime is missing
+            if engine == "native":
+                raise
+    from . import treeinfer
+    return getattr(treeinfer, numpy_cls)(path)
 
 
 class _LgbBoosterWrapper:
