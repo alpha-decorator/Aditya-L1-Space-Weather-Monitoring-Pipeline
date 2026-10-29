@@ -4,7 +4,7 @@ NOAA SWPC, run the nowcast and both forecast models in batch, and return a
 JSON-ready dict.
 
 Batch over the last 3 days gives the same numbers as the streaming engine
-(verified in ../forecast/tests), so nothing has to stay alive between
+(verified in tests/test_forecast.py), so nothing has to stay alive between
 requests - the same function serves the local server and a serverless
 deployment.
 """
@@ -19,11 +19,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[2]
-for sub in ("", "nowcast", "forecast"):
-    p = str(ROOT / sub)
-    if p not in sys.path:
-        sys.path.insert(0, p)
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from l1_nowcast import GOESLiveSource, goes_channels, goes_class, run_batch  # noqa: E402
 from l1_forecast import (FlareForecaster, alert_episodes, alert_series,  # noqa: E402

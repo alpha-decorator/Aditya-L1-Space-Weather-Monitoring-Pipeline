@@ -4,8 +4,8 @@ HTTP API for the dashboard.
     GET /api/snapshot   latest nowcast + forecast snapshot (recomputed at most every 30 s)
     GET /api/health
 
-Run locally with ``python serve.py`` (which also serves ../public). On a
-serverless host this module is the function entry point (``app``).
+Run locally with ``python serve.py`` (which also serves public/). On Vercel
+this module is the serverless function (``app``) and public/ is served as static files.
 """
 
 from __future__ import annotations

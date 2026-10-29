@@ -14,9 +14,11 @@ X-ray stream ─► nowcast engine ─► flare catalogue + live alerts (onset /
 
 | Component | Folder | Question it answers |
 |---|---|---|
-| Nowcast | [`nowcast/`](nowcast/README.md) | Is a flare in progress? When did it start? What class? |
-| Forecast | [`forecast/`](forecast/README.md) | Will the nowcast confirm a flare in the next 15 minutes? |
-| Original notebook | `model.ipynb`, `model.pdf` | First forecasting prototype (kept for reference; see below) |
+| Nowcast | [`l1_nowcast/`](docs/nowcast.md) | Is a flare in progress? When did it start? What class? |
+| Forecast | [`l1_forecast/`](docs/forecast.md) | Will the nowcast confirm a flare in the next 15 minutes? |
+| Continual learning | [`continual/`](docs/continual.md) | Retrain daily; promote a new model only if it is better on unseen days |
+| Dashboard | [`api/`, `public/`](docs/dashboard.md) | FlareWatch: live alarms and charts on GOES-19 |
+| Original notebook | `notebooks/original/` | First forecasting prototype (kept for reference; see below) |
 
 ---
 
@@ -54,20 +56,20 @@ X-ray stream ─► nowcast engine ─► flare catalogue + live alerts (onset /
 hold up: labels were built from whole-dataset statistics (including the test period), one flare was counted several times,
 lead time was measured to the peak rather than the start, rows during flares were scored, LightGBM's 0/1 `predict()` was
 averaged with probabilities, rolling windows counted rows across data gaps, and the test held only 25 events. Each issue is
-fixed in `forecast/` — see the table at the top of `forecast/forecast.ipynb`. The results above are the honest replacement.
+fixed in `l1_forecast` — see the table at the top of `notebooks/forecast.ipynb`. The results above are the honest replacement.
 
 ---
 
 ## 🚀 Quick start
 
 ```bash
-pip install -r forecast/requirements.txt     # includes nowcast requirements
+pip install -r requirements-dev.txt
 
-cd nowcast  && jupyter notebook nowcast.ipynb    # downloads ~100 MB of GOES data from NOAA NCEI on first run
-cd forecast && jupyter notebook forecast.ipynb   # needs ../nowcast and its data cache
+python serve.py                              # live dashboard on http://127.0.0.1:8000 (add --retrain-daily)
+jupyter notebook notebooks/nowcast.ipynb     # downloads ~100 MB of GOES data from NOAA NCEI into data/ on first run
+jupyter notebook notebooks/forecast.ipynb    # needs that data cache
 
-python -m pytest -q nowcast/tests     # 19 tests
-python -m pytest -q forecast/tests    # 8 tests
+python -m pytest -q                          # 32 tests (nowcast 19, forecast 8, continual 5)
 ```
 
 Live GOES-19 nowcast + forecast:
@@ -78,7 +80,7 @@ from l1_nowcast import NowcastEngine, GOESLiveSource, goes_channels
 
 models = {}
 for name in ("C1", "M1"):
-    m = FlareForecaster.load(f"forecast/models/{name}")
+    m = FlareForecaster.load(f"models/{name}")
     r = m.saved["alert_rule"]
     models[name] = (m, AlertManager(r["threshold"], r["m"], r["n"]))
 
@@ -88,16 +90,17 @@ for sample in GOESLiveSource(backfill="3-day"):
     print(rec["time"], rec["nowcast_state"], f"P(C1)={rec['p_C1']:.1%}", f"P(M1)={rec['p_M1']:.1%}")
 ```
 
-For Aditya-L1 (1 s SoLEXS + HEL1OS), see the Aditya-L1 sections of [`nowcast/README.md`](nowcast/README.md) and
-[`forecast/README.md`](forecast/README.md).
+For Aditya-L1 (1 s SoLEXS + HEL1OS), see the Aditya-L1 sections of [`docs/nowcast.md`](docs/nowcast.md) and
+[`docs/forecast.md`](docs/forecast.md).
 
 ---
 
 ## 🖥️ Live dashboard and continual learning
 
-* [`dashboard/`](dashboard/README.md) — **FlareWatch**, a web dashboard on the live GOES-19 feed: alarm board, charts,
-  alarm log with outcomes, model skill and versions. `python dashboard/serve.py` → http://127.0.0.1:8000
-* [`continual/`](continual/README.md) — the forecaster keeps learning while deployed: each day's data is stored, both
+* [`api/` + `public/`](docs/dashboard.md) — **FlareWatch**, a web dashboard on the live GOES-19 feed: alarm board, charts,
+  alarm log with outcomes, model skill and versions. `python serve.py` → http://127.0.0.1:8000.
+  The repository root deploys to Vercel as is (`vercel.json`, see [docs/dashboard.md](docs/dashboard.md#deploy-on-vercel))
+* [`continual/`](docs/continual.md) — the forecaster keeps learning while deployed: each day's data is stored, both
   models are retrained on the full history, and a new version goes live only if it beats the current one on days
   neither has seen. Runs daily via `serve.py --retrain-daily` or `.github/workflows/daily-retrain.yml`.
 
@@ -105,20 +108,27 @@ For Aditya-L1 (1 s SoLEXS + HEL1OS), see the Aditya-L1 sections of [`nowcast/REA
 
 ## 📁 Repository layout
 
+One repository, one root: the root is both the Python project and the Vercel site.
+
 ```
-├── nowcast/
-│   ├── l1_nowcast/          # background, detector + fusion, data sources, validation
-│   ├── nowcast.ipynb        # download → audit → tune → validate → baselines → streaming → live → Aditya-L1
-│   ├── tests/
-│   └── outputs/             # flare catalogues, tuned config, validation tables, figures
-├── forecast/
-│   ├── l1_forecast/         # features, labels, model, walk-forward training, alerts, streaming engine
-│   ├── forecast.ipynb
-│   ├── models/{C1,M1,C1_transfer}/
-│   ├── tests/
-│   └── outputs/             # metrics tables and figures
-├── model.ipynb / model.pdf  # original prototype
-└── plot1.png, plot2.png     # figures from the original prototype
+├── api/index.py             # Vercel serverless function (FastAPI): /api/snapshot, /api/health
+├── public/                  # the FlareWatch page: index.html, styles.css, app.js (no build step)
+├── flaremon/                # snapshot builder: SWPC feed → nowcast → forecast → JSON
+├── l1_nowcast/              # background, detector + fusion, data sources, validation
+├── l1_forecast/             # features, labels, model, walk-forward training, alerts, streaming engine
+├── continual/               # daily store + retrain + champion/challenger registry
+│   ├── store/               #   stored GOES-19 data (training only, not deployed)
+│   └── registry/            #   model versions, active.json, decision log
+├── models/{C1,M1,C1_transfer}/   # validated base models
+├── notebooks/               # nowcast.ipynb, forecast.ipynb, original/ (first prototype + its plots)
+├── outputs/{nowcast,forecast}/   # catalogues, validation tables, figures
+├── tests/                   # 32 tests
+├── docs/                    # component docs + FlareWatch_Project_Report.pdf
+├── serve.py                 # local server (API + page, optional daily retrain)
+├── requirements.txt         # runtime only (what Vercel installs)
+├── requirements-dev.txt     # notebooks, training, tests
+├── vercel.json, .vercelignore
+└── .github/workflows/daily-retrain.yml
 ```
 
 ---

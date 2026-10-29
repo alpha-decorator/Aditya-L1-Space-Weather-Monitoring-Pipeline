@@ -79,22 +79,21 @@ res.fused            # catalogue with BOTH / SOFT-only / HARD-only labels and so
 ## Files
 
 ```
-nowcast/
-├── nowcast.ipynb            # download → audit → tune (Jan-Apr) → validate (May-Oct) → baselines → streaming → live → Aditya-L1 → export
+notebooks/nowcast.ipynb      # download → audit → tune (Jan-Apr) → validate (May-Oct) → baselines → streaming → live → Aditya-L1 → export
 ├── l1_nowcast/
 │   ├── background.py        # incremental rolling window + flare-masked adaptive background
 │   ├── detector.py          # channel state machine, events, fusion, engine, GOES classes, counts→flux calibration
 │   ├── sources.py           # GOES live/archive, NOAA flare list, SoLEXS/HEL1OS CSV, OGIP FITS, folder watcher, aligner
 │   └── validate.py          # one-to-one matching vs a reference catalogue, scores, parameter tuning
-├── tests/test_nowcast.py    # 19 tests (synthetic flares, streaming = batch, fusion, readers, aligner, parsing)
-├── outputs/                 # catalogues, validation tables, tuned config (nowcast_config.json), figures
-└── data/                    # GOES archive cache (git-ignored, re-downloaded by the notebook)
+tests/test_nowcast.py        # 19 tests (synthetic flares, streaming = batch, fusion, readers, aligner, parsing)
+outputs/nowcast/             # catalogues, validation tables, tuned config (nowcast_config.json), figures
+data/                        # GOES archive cache (git-ignored, re-downloaded by the notebook)
 ```
 
 ```bash
-pip install -r requirements.txt
-jupyter notebook nowcast.ipynb     # first run downloads ~100 MB from NOAA NCEI
-python -m pytest -q tests
+pip install -r requirements-dev.txt
+jupyter notebook notebooks/nowcast.ipynb   # first run downloads ~100 MB from NOAA NCEI into data/
+python -m pytest -q tests/test_nowcast.py
 ```
 
 ## Limitations

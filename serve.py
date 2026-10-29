@@ -18,11 +18,10 @@ from fastapi.staticfiles import StaticFiles
 
 from api.index import app
 
-HERE = Path(__file__).resolve().parent
-REPO = HERE.parent
+REPO = Path(__file__).resolve().parent
 RUN_AT_UTC = dt.time(0, 30)
 
-app.mount("/", StaticFiles(directory=HERE / "public", html=True), name="public")
+app.mount("/", StaticFiles(directory=REPO / "public", html=True), name="public")
 
 
 def _ran_today() -> bool:

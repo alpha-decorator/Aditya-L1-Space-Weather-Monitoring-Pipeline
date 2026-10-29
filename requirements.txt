@@ -1,0 +1,6 @@
+# Runtime for the dashboard API (this is what Vercel installs for api/index.py).
+numpy>=1.26
+pandas>=2.2
+lightgbm>=4.3
+xgboost-cpu>=2.1     # CPU-only build of xgboost: same `import xgboost`, without the ~300 MB CUDA libraries
+fastapi>=0.110

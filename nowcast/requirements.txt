@@ -1,7 +1,0 @@
-numpy>=1.26
-pandas>=2.2
-h5py>=3.10          # GOES NCEI netCDF4/HDF5 files
-pyarrow>=15         # parquet cache of the GOES archive
-matplotlib>=3.8
-astropy>=6.0        # only for Aditya-L1 OGIP FITS light curves
-pytest>=8           # tests/

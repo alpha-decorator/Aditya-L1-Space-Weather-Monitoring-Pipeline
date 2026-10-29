@@ -14,14 +14,9 @@ Every day:
     python -m continual status
 """
 
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-for _sub in ("nowcast", "forecast"):
-    _p = str(ROOT / _sub)
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
 
 from .registry import Registry  # noqa: E402
 from .store import DataStore  # noqa: E402

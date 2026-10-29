@@ -3,14 +3,7 @@ l1_forecast - 15-minute solar flare forecasting on top of the l1_nowcast
 streaming engine (Aditya-L1 SoLEXS/HEL1OS or GOES-R XRS input).
 """
 
-import sys
-from pathlib import Path
-
-try:
-    import l1_nowcast  # noqa: F401
-except ImportError:  # running from the repository: use the sibling nowcast/ folder
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "nowcast"))
-    import l1_nowcast  # noqa: F401
+import l1_nowcast  # noqa: F401
 
 from .alerts import (AlertManager, alert_episodes, alert_series, probability_scores,
                      score_events, tss_at, tune_alert_rule)

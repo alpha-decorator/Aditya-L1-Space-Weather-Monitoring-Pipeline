@@ -10,7 +10,7 @@ def main():
     ap = argparse.ArgumentParser(prog="python -m continual")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("seed", help="import the NCEI archive downloaded by nowcast.ipynb into the store")
-    s.add_argument("--archive", default=str(ROOT / "nowcast" / "data" / "goes" / "avg1m"))
+    s.add_argument("--archive", default=str(ROOT / "data" / "goes" / "avg1m"))
     sub.add_parser("ingest", help="store new complete days from the real-time feed")
     d = sub.add_parser("daily", help="ingest + retrain + promote if better")
     d.add_argument("--no-ingest", action="store_true")

@@ -1,4 +1,4 @@
-"""Unit tests for l1_nowcast. Run from the nowcast/ folder:  python -m pytest -q"""
+"""Unit tests for l1_nowcast. Run from the repository root:  python -m pytest -q"""
 
 import json
 import math

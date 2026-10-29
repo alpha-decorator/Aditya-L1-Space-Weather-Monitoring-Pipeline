@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from continual import DataStore, Registry  # noqa: E402
 from continual.retrain import MIN_UNSEEN_DAYS, decide  # noqa: E402
 

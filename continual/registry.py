@@ -6,7 +6,7 @@ Model registry.
     ├── log.jsonl              one line per target per daily run: metrics of both models + decision
     └── <target>/<version>/    lgb_model.txt, xgb_model.json, forecaster.json
 
-Version ``base`` is the hand-validated model in ../forecast/models/<target>, the starting champion.
+Version ``base`` is the hand-validated model in models/<target>, the starting champion.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import pandas as pd
 from . import ROOT
 
 REGISTRY = ROOT / "continual" / "registry"
-BASE_MODELS = ROOT / "forecast" / "models"
+BASE_MODELS = ROOT / "models"
 
 
 class Registry:

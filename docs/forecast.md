@@ -7,7 +7,7 @@ y(t) = 1   if the nowcast engine raises a flare alarm (peak ≥ C1.0, or ≥ M1.
 ```
 
 Scored only while **no flare is in progress** (nowcast state QUIET or DECAY), because during a flare the nowcast already knows.
-Labels come from the causal nowcast catalogue in `../nowcast`, which is validated against NOAA's official flare list (F1 0.91).
+Labels come from the causal nowcast catalogue from `l1_nowcast`, which is validated against NOAA's official flare list (F1 0.91).
 
 ## Results (held-out Jul 1 – Oct 27 2026, walk-forward monthly retraining)
 
@@ -75,8 +75,7 @@ unchanged, only the source and channel names differ.
 ## Files
 
 ```
-forecast/
-├── forecast.ipynb           # labels → features → walk-forward → baselines → calibration → alert tuning → test → models → streaming → live → Aditya-L1
+notebooks/forecast.ipynb     # labels → features → walk-forward → baselines → calibration → alert tuning → test → models → streaming → live → Aditya-L1
 ├── l1_forecast/
 │   ├── features.py          # causal gap-aware features, record aggregation, eligibility
 │   ├── labels.py            # targets from the nowcast catalogue
@@ -84,13 +83,13 @@ forecast/
 │   ├── training.py          # monthly walk-forward with embargo
 │   ├── alerts.py            # alert rule (batch + streaming), event scoring, tuning, probability scores
 │   └── engine.py            # streaming nowcast + multi-model forecast engine
-├── models/{C1,M1,C1_transfer}/   # production models (lgb_model.txt, xgb_model.json, forecaster.json with alert rule + test metrics)
-├── tests/test_forecast.py   # 8 tests (targets, causality, alert rule = streaming, scoring, save/load, stream = batch at 1 min and 1 s→1 min)
-└── outputs/                 # metrics tables and figures
+models/{C1,M1,C1_transfer}/     # production models (lgb_model.txt, xgb_model.json, forecaster.json with alert rule + test metrics)
+tests/test_forecast.py       # 8 tests (targets, causality, alert rule = streaming, scoring, save/load, stream = batch at 1 min and 1 s→1 min)
+outputs/forecast/            # metrics tables and figures
 ```
 
 ```bash
-pip install -r requirements.txt
-jupyter notebook forecast.ipynb    # needs ../nowcast (and its data cache, which nowcast.ipynb downloads)
-python -m pytest -q tests
+pip install -r requirements-dev.txt
+jupyter notebook notebooks/forecast.ipynb   # needs the GOES data cache in data/, which nowcast.ipynb downloads
+python -m pytest -q tests/test_forecast.py
 ```

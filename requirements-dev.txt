@@ -1,0 +1,9 @@
+# Everything else: notebooks, daily retraining, tests, local server.
+-r requirements.txt
+scikit-learn>=1.4   # calibration + metrics (training only)
+pyarrow>=15         # parquet: GOES archive cache and the continual-learning store
+h5py>=3.10          # GOES NCEI netCDF4/HDF5 files
+matplotlib>=3.8
+astropy>=6.0        # only for Aditya-L1 OGIP FITS light curves
+uvicorn[standard]>=0.29
+pytest>=8

@@ -1,4 +1,4 @@
-"""Unit tests for l1_forecast. Run from the forecast/ folder:  python -m pytest -q"""
+"""Unit tests for l1_forecast. Run from the repository root:  python -m pytest -q"""
 
 import sys
 import warnings

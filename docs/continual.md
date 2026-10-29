@@ -24,13 +24,13 @@ day, every day.
 
 * The candidate is trained on data up to `T − 7 days`. Its probability calibration and alert threshold
   are fitted on the 30 days before that, with a model that had not seen them (same recipe as
-  `forecast/forecast.ipynb`).
+  `notebooks/forecast.ipynb`).
 * Both models are scored on the days after **both** of their training periods (plus a 1-day embargo),
   so neither has seen them.
 * Promote if the candidate's log loss is no worse (0.5 % tolerance) and its alarm CSI is not clearly
   worse (0.05). With fewer than 3 unseen days, keep the active model and only log the run.
 
-The starting champion is the validated model in `forecast/models/` (version `base`), trained through
+The starting champion is the validated model in `models/` (version `base`), trained through
 Oct 27 2026. The first fair comparison is therefore possible from about Nov 1.
 
 Replayed on past data (champion trained through Sep 8, candidate through Sep 23, scored on Sep 25–30):
@@ -43,12 +43,12 @@ was rejected (log loss 0.0037 vs 0.0013): the gate blocks a worse model.
 python -m continual seed       # once: import the NCEI archive downloaded by nowcast.ipynb (Jan 1 – Oct 27 2026)
 python -m continual daily      # ingest + retrain + gate (~30 s)
 python -m continual status     # store coverage, active versions, recent decisions
-python -m pytest -q continual/tests
+python -m pytest -q tests/test_continual.py
 ```
 
 Scheduling:
 
-* **Locally**: `python dashboard/serve.py --retrain-daily` runs the cycle at 00:30 UTC (and at start-up if
+* **Locally**: `python serve.py --retrain-daily` runs the cycle at 00:30 UTC (and at start-up if
   it hasn't run today). The dashboard picks up a promoted model on its next refresh, no restart needed.
 * **Deployed**: `.github/workflows/daily-retrain.yml` runs the cycle on GitHub Actions at 00:30 UTC and
   commits `continual/store` and `continual/registry`. The push redeploys the site with the new active models.
@@ -60,7 +60,7 @@ continual/
 ├── store.py      DataStore: history (permanent) + live cache (rolling 10 days), ingest, merge
 ├── registry.py   versioned models, active.json, log.jsonl, pruning (active + 2 newest kept)
 ├── retrain.py    dataset build, candidate training, evaluation, promotion gate, daily_cycle
-├── store/        data (~8 MB for 10 months, grows ~25 KB/day)
+├── store/        data (not deployed, see .vercelignore) (~8 MB for 10 months, grows ~25 KB/day)
 └── registry/     models and the decision log
 ```
 

@@ -1,0 +1,10 @@
+# Not needed by the deployed site; keeps the Python function small.
+data/
+notebooks/
+outputs/
+docs/
+tests/
+continual/store/
+.github/
+*.ipynb
+*.pdf

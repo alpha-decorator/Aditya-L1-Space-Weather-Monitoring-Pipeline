@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+catboost_info/
+.vercel/
+# GOES archive cache (~100 MB), re-created by notebooks/nowcast.ipynb
+data/

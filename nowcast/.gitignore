@@ -1,5 +1,0 @@
-# GOES archive cache (~100 MB) - re-created by nowcast.ipynb / download_goes_archive()
-data/
-__pycache__/
-.pytest_cache/
-.ipynb_checkpoints/
